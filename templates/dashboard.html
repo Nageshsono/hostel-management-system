@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<h2>🏠 Hostel Dashboard</h2>
+
+<div class="cards">
+
+    <div class="card">
+        <h3>Total Students</h3>
+        <h1>{{ total_students }}</h1>
+    </div>
+
+    <div class="card">
+        <h3>Present Today</h3>
+        <h1>{{ present_today }}</h1>
+    </div>
+
+    <div class="card">
+        <h3>Absent Today</h3>
+        <h1>{{ absent_today }}</h1>
+    </div>
+
+</div>
+
+<br><br>
+
+<h2>Room Occupancy</h2>
+
+<div style="width:700px">
+    <canvas id="roomChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+    const roomData = {{ room_data| tojson }};
+
+    new Chart(document.getElementById("roomChart"), {
+
+        type: "bar",
+
+        data: {
+
+            labels: [
+                "Room 1",
+                "Room 2",
+                "Room 3",
+                "Room 4",
+                "Room 5",
+                "Room 6"
+            ],
+
+            datasets: [{
+
+                label: "Students",
+
+                data: roomData,
+
+                backgroundColor: [
+                    "#3498db",
+                    "#2ecc71",
+                    "#f1c40f",
+                    "#e74c3c",
+                    "#9b59b6",
+                    "#1abc9c"
+                ]
+
+            }]
+
+        }
+
+    });
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+
+<h2>Create Account</h2>
+
+<form method="POST">
+
+    <label>Username</label>
+
+    <input type="text" name="username" required>
+
+    <label>Password</label>
+
+    <input type="password" name="password" required>
+
+    <label>Confirm Password</label>
+
+    <input type="password" name="confirm_password" required>
+
+    <br><br>
+
+    <button type="submit">
+        Register
+    </button>
+
+</form>
+
+<br>
+
+<a href="{{ url_for('login') }}">
+    Already have an account?
+</a>
+
+{% endblock %}

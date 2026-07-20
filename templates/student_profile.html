@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Profile{% endblock %}
+
+{% block content %}
+
+<h2>Student Profile</h2>
+
+<table border="1" cellpadding="10" width="60%">
+
+    <tr>
+        <th>Name</th>
+        <td>{{ student.name }}</td>
+    </tr>
+
+    <tr>
+        <th>Gender</th>
+        <td>{{ student.gender }}</td>
+    </tr>
+
+    <tr>
+        <th>Mobile</th>
+        <td>{{ student.mobile }}</td>
+    </tr>
+
+    <tr>
+        <th>Department</th>
+        <td>{{ student.department }}</td>
+    </tr>
+
+    <tr>
+        <th>Year</th>
+        <td>{{ student.year }}</td>
+    </tr>
+
+    <tr>
+        <th>Room</th>
+        <td>{{ student.room }}</td>
+    </tr>
+
+    <tr>
+        <th>Address</th>
+        <td>{{ student.address }}</td>
+    </tr>
+
+</table>
+
+<br>
+
+<a href="{{ url_for('students') }}">
+    <button>Back</button>
+</a>
+
+{% endblock %}

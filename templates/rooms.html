@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}Rooms{% endblock %}
+
+{% block content %}
+
+<h2>Room Allocation</h2>
+
+{% for room in room_list %}
+
+<h3>Room {{ room.room }} ({{ room.count }}/12)</h3>
+
+<table border="1" cellpadding="8">
+
+    <tr>
+        <th>Name</th>
+        <th>Department</th>
+        <th>Year</th>
+    </tr>
+
+    {% for student in room.students %}
+
+    <tr>
+        <td>{{ student.name }}</td>
+        <td>{{ student.department }}</td>
+        <td>{{ student.year }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+<br>
+
+{% endfor %}
+
+{% endblock %}

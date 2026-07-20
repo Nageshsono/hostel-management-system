@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}Students{% endblock %}
+
+{% block content %}
+
+<h2>Students List</h2>
+
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>Profile</th>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Room</th>
+        <th>Year</th>
+        <th>Department</th>
+       
+    </tr>
+
+    {% for student in students %}
+
+    <tr>
+        <td>
+            <a href="{{ url_for('student_profile', id=student.id) }}">
+                View
+            </a>
+        </td>
+        <td>{{ student.id }}</td>
+        <td>{{ student.name }}</td>
+        <td>{{ student.room }}</td>
+        <td>{{ student.year }}</td>
+        <td>{{ student.department }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %}Fee Management{% endblock %}
+
+{% block content %}
+
+<h2>💰 Student Fee Management</h2>
+
+<br>
+
+<form method="POST">
+
+    <label>Student</label>
+    <select name="student_id" required>
+        <option value="">-- Select Student --</option>
+
+        {% for student in students %}
+        <option value="{{ student.id }}">
+            {{ student.name }} (Room {{ student.room }})
+        </option>
+        {% endfor %}
+
+    </select>
+
+    <label>Total Fee</label>
+    <input type="number" name="total_fee" placeholder="Enter Total Fee" required>
+
+    <label>Paid Fee</label>
+    <input type="number" name="paid_fee" placeholder="Enter Paid Fee" required>
+
+    <label>Payment Date</label>
+    <input type="date" name="payment_date" required>
+
+    <label>Payment Method</label>
+
+    <select name="payment_method">
+        <option>Cash</option>
+        <option>UPI</option>
+        <option>Card</option>
+        <option>Bank Transfer</option>
+    </select>
+
+    <label>Remarks</label>
+    <textarea name="remarks" rows="3"></textarea>
+
+    <br>
+
+    <button type="submit">💾 Save Fee</button>
+
+</form>
+
+<br><br>
+
+<h2>Fee Details</h2>
+
+<table>
+
+    <tr>
+        <th>Student</th>
+        <th>Room</th>
+        <th>Total Fee</th>
+        <th>Paid</th>
+        <th>Due</th>
+        <th>Status</th>
+        <th>Payment Date</th>
+    </tr>
+
+    {% for fee in fees %}
+
+    <tr>
+
+        <td>{{ fee.name }}</td>
+
+        <td>{{ fee.room }}</td>
+
+        <td>₹ {{ fee.total_fee }}</td>
+
+        <td>₹ {{ fee.paid_fee }}</td>
+
+        <td>₹ {{ fee.due_fee }}</td>
+
+        <td>
+
+            {% if fee.payment_status=="Paid" %}
+            <span style="color:green;font-weight:bold;">✅ Paid</span>
+
+            {% elif fee.payment_status=="Partial" %}
+            <span style="color:orange;font-weight:bold;">🟡 Partial</span>
+
+            {% else %}
+            <span style="color:red;font-weight:bold;">❌ Pending</span>
+            {% endif %}
+
+        </td>
+
+        <td>{{ fee.payment_date }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}

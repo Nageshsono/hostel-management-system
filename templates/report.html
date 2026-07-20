@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block title %}Attendance Report{% endblock %}
+
+{% block content %}
+
+<h2>Attendance Report</h2>
+
+<form method="GET">
+
+    <input type="text" name="search" placeholder="Search Student" value="{{ search }}">
+
+    <button type="submit">
+        Search
+    </button>
+
+</form>
+<a href="{{ url_for('export_pdf') }}">
+    <button class="btn btn-success">
+        📄 Export PDF
+    </button>
+</a>
+
+<br><br>
+<br>
+
+<table border="1" cellpadding="8" width="100%">
+
+    <tr>
+
+        <th>Name</th>
+        <th>Room</th>
+        <th>Department</th>
+        <th>Year</th>
+        <th>Present</th>
+        <th>Absent</th>
+        <th>Attendance %</th>
+
+    </tr>
+
+    {% for student in reports %}
+
+    <tr>
+
+        <td>{{ student.name }}</td>
+
+        <td>{{ student.room }}</td>
+
+        <td>{{ student.department }}</td>
+
+        <td>{{ student.year }}</td>
+
+        <td>{{ student.present }}</td>
+
+        <td>{{ student.absent }}</td>
+
+        <td>{{ student.percentage }}%</td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}

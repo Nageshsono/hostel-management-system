@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block title %}Today's Attendance{% endblock %}
+
+{% block content %}
+
+<h2>Today's Attendance ({{ today }})</h2>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>Name</th>
+        <th>Room</th>
+        <th>Status</th>
+    </tr>
+
+    {% for record in records %}
+
+    <tr>
+
+        <td>{{ record.name }}</td>
+
+        <td>{{ record.room }}</td>
+
+        <td>
+
+            {% if record.status=="Present" %}
+            <span style="color:green;">✅ Present</span>
+            {% else %}
+            <span style="color:red;">❌ Absent</span>
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+<br><br>
+
+<h2>Attendance Summary</h2>
+
+<div style="width:400px">
+
+    <canvas id="attendanceChart"></canvas>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+    new Chart(document.getElementById("attendanceChart"), {
+
+        type: "pie",
+
+        data: {
+
+            labels: ["Present", "Absent"],
+
+            datasets: [{
+
+                data: [{{ present_count }}, {{ absent_count }}],
+
+        backgroundColor: ["green", "red"]
+
+    }]
+
+}
+
+});
+
+</script>
+
+{% endblock %}

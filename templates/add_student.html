@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Student{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h2>➕ Add New Student</h2>
+
+    <form method="POST" action="{{ url_for('add_student') }}">
+
+        <div class="form-group">
+            <label>Student Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Enter Student Name" required>
+        </div>
+
+        <div class="form-group">
+            <label>Gender</label>
+            <select name="gender" class="form-control" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" name="mobile" class="form-control" maxlength="10" pattern="[0-9]{10}"
+                placeholder="9876543210" required>
+        </div>
+
+        <div class="form-group">
+            <label>Department</label>
+            <select name="department" class="form-control" required>
+                <option value="">Select Department</option>
+                <option>CSE</option>
+                <option>ECE</option>
+                <option>EEE</option>
+                <option>MECH</option>
+                <option>CIVIL</option>
+                <option>AIML</option>
+                <option>DS</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Year</label>
+            <select name="year" class="form-control" required>
+                <option value="">Select Year</option>
+                <option>1st Year</option>
+                <option>2nd Year</option>
+                <option>3rd Year</option>
+                <option>4th Year</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Room Number</label>
+            <select name="room" class="form-control" required>
+                <option value="">Select Room</option>
+                <option value="1">Room 1</option>
+                <option value="2">Room 2</option>
+                <option value="3">Room 3</option>
+                <option value="4">Room 4</option>
+                <option value="5">Room 5</option>
+                <option value="6">Room 6</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Address</label>
+            <textarea name="address" class="form-control" rows="4" placeholder="Enter Address" required></textarea>
+        </div>
+
+        <br>
+
+        <button type="submit" class="btn btn-success">
+            💾 Save Student
+        </button>
+
+        <a href="{{ url_for('students') }}" class="btn btn-danger">
+            Cancel
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -220,23 +220,23 @@ def add_student():
             (room_no,)
         )
 
-        room_count = cursor.fetchone()[0]
+        room_no_count = cursor.fetchone()[0]
 
-        if room_count >= 4:
+        if room_no_count >= 4:
             flash(f"Room {room_no} is already full.")
             conn.close()
             return redirect(url_for("add_student"))
 
         cursor.execute("""
             INSERT INTO students
-            (name, gender, mobile, address, room, year, department)
+            (name, gender, mobile, address, room_no, year, department)
             VALUES (?,?,?,?,?,?,?)
         """, (
             name,
             gender,
             mobile,
             address,
-            room,
+            room_no,
             year,
             department
         ))

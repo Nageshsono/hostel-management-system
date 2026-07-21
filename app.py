@@ -7,6 +7,7 @@ from flask import (
     session,
     flash,send_file
 )
+from datetime import date
 import io
 
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -58,10 +59,10 @@ def register():
             return redirect(url_for("register"))
 
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT * FROM users WHERE username=%?",
+            "SELECT * FROM users WHERE username=?",
             (username,)
         )
 
@@ -93,7 +94,6 @@ def register():
     # =====================================
 # LOGIN
 # =====================================
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -103,7 +103,7 @@ def login():
         password = request.form["password"]
 
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         cursor.execute(
             "SELECT * FROM users WHERE username=?",
@@ -126,6 +126,7 @@ def login():
         flash("Invalid Username or Password")
 
     return render_template("login.html")
+
     # =====================================
 # LOGOUT
 # =====================================
@@ -141,6 +142,8 @@ def logout():
     # =====================================
 # DASHBOARD
 # =====================================
+from datetime import date
+
 @app.route("/dashboard")
 def dashboard():
 
@@ -148,7 +151,7 @@ def dashboard():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     # Total Students
     cursor.execute("SELECT COUNT(*) AS total FROM students")
@@ -157,34 +160,26 @@ def dashboard():
     # Total Rooms
     total_rooms = 6
 
+    # Today's date
+    today = date.today().isoformat()
+
     # Present Today
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE attendance_date = CURDATE()
-        AND status='Present'
-    """)
+        WHERE date = ?
+        AND status = ?
+    """, (today, "Present"))
     present_today = cursor.fetchone()["total"]
 
     # Absent Today
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE attendance_date = CURDATE()
-        AND status='Absent'
-    """)
+        WHERE date = ?
+        AND status = ?
+    """, (today, "Absent"))
     absent_today = cursor.fetchone()["total"]
-
-    # Room Occupancy
-    room_data = []
-
-    for room in range(1, 7):
-        cursor.execute(
-            "SELECT COUNT(*) AS total FROM students WHERE room=?",
-            (room,)
-        )
-
-        room_data.append(cursor.fetchone()["total"])
 
     conn.close()
 
@@ -194,7 +189,7 @@ def dashboard():
         total_rooms=total_rooms,
         present_today=present_today,
         absent_today=absent_today,
-        room_data=room_data
+        room_data=[]
     )
 
 # ADD STUDENT
@@ -265,12 +260,12 @@ def students():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT *
         FROM students
-        ORDER BY room, name
+        ORDER BY room_no, name
     """)
 
     students = cursor.fetchall()
@@ -284,7 +279,6 @@ def students():
     # =====================================
 # ROOMS
 # =====================================
-
 @app.route("/rooms")
 def rooms():
 
@@ -292,16 +286,18 @@ def rooms():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     room_list = []
 
     for room in range(1, 7):
 
-        cursor.execute(
-            "SELECT * FROM students WHERE room=? ORDER BY name",
-            (room,)
-        )
+        cursor.execute("""
+            SELECT *
+            FROM students
+            WHERE room_no = ?
+            ORDER BY name
+        """, (str(room),))
 
         students = cursor.fetchall()
 
@@ -317,6 +313,7 @@ def rooms():
         "rooms.html",
         room_list=room_list
     )
+
     # =====================================
 # ATTENDANCE
 # =====================================
@@ -334,9 +331,9 @@ def attendance():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
-    today = date.today()
+    today = date.today().isoformat()
 
     if request.method == "POST":
 
@@ -353,8 +350,8 @@ def attendance():
             cursor.execute("""
                 SELECT id
                 FROM attendance
-                WHERE student_id=?
-                AND attendance_date=?
+                WHERE student_id = ?
+                AND date = ?
             """, (student_id, today))
 
             record = cursor.fetchone()
@@ -363,16 +360,16 @@ def attendance():
 
                 cursor.execute("""
                     UPDATE attendance
-                    SET status=?
-                    WHERE id=?
+                    SET status = ?
+                    WHERE id = ?
                 """, (status, record["id"]))
 
             else:
 
                 cursor.execute("""
                     INSERT INTO attendance
-                    (student_id, attendance_date, status)
-                    VALUES (?,?,?)
+                    (student_id, date, status)
+                    VALUES (?, ?, ?)
                 """, (
                     student_id,
                     today,
@@ -380,7 +377,6 @@ def attendance():
                 ))
 
         conn.commit()
-        conn.close()
 
         flash("Attendance Saved Successfully")
 
@@ -389,7 +385,7 @@ def attendance():
     cursor.execute("""
         SELECT *
         FROM students
-        ORDER BY room,name
+        ORDER BY room_no, name
     """)
 
     students = cursor.fetchall()
@@ -404,6 +400,8 @@ def attendance():
     # =====================================
 # TODAY ATTENDANCE
 # =====================================
+from datetime import date
+
 @app.route("/today_attendance")
 def today_attendance():
 
@@ -411,38 +409,43 @@ def today_attendance():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
-    today = date.today()
+    today = date.today().isoformat()
 
+    # Today's attendance records
     cursor.execute("""
         SELECT
             students.name,
-            students.room,
+            students.room_no,
             attendance.status
         FROM attendance
         INNER JOIN students
             ON students.id = attendance.student_id
-        WHERE attendance.attendance_date=?
-        ORDER BY students.room, students.name
+        WHERE attendance.date = ?
+        ORDER BY students.room_no, students.name
     """, (today,))
 
     records = cursor.fetchall()
 
+    # Present Count
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE attendance_date=?
-        AND status='Present'
-    """, (today,))
+        WHERE date = ?
+        AND status = ?
+    """, (today, "Present"))
+
     present_count = cursor.fetchone()["total"]
 
+    # Absent Count
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE attendance_date=?
-        AND status='Absent'
-    """, (today,))
+        WHERE date = ?
+        AND status = ?
+    """, (today, "Absent"))
+
     absent_count = cursor.fetchone()["total"]
 
     conn.close()
@@ -454,11 +457,9 @@ def today_attendance():
         present_count=present_count,
         absent_count=absent_count
     )
-
     # =====================================
 # ATTENDANCE REPORT
 # =====================================
-
 @app.route("/report")
 def report():
 
@@ -466,7 +467,7 @@ def report():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     search = request.args.get("search", "")
 
@@ -483,35 +484,37 @@ def report():
 
     for student in students:
 
+        # Present Count
         cursor.execute("""
             SELECT COUNT(*) AS present
             FROM attendance
-            WHERE student_id=?
-            AND status='Present'
-        """, (student["id"],))
+            WHERE student_id = ?
+            AND status = ?
+        """, (student["id"], "Present"))
 
         present = cursor.fetchone()["present"]
 
+        # Absent Count
         cursor.execute("""
             SELECT COUNT(*) AS absent
             FROM attendance
-            WHERE student_id=?
-            AND status='Absent'
-        """, (student["id"],))
+            WHERE student_id = ?
+            AND status = ?
+        """, (student["id"], "Absent"))
 
         absent = cursor.fetchone()["absent"]
 
         total = present + absent
 
-        percentage = 0
-
         if total > 0:
             percentage = round((present / total) * 100, 2)
+        else:
+            percentage = 0
 
         reports.append({
             "name": student["name"],
-            "room": student["room"],
-            "department": student["department"],
+            "room": student["room_no"],      # SQLite column
+            "branch": student["branch"],     # SQLite column
             "year": student["year"],
             "present": present,
             "absent": absent,
@@ -525,72 +528,20 @@ def report():
         reports=reports,
         search=search
     )
-    @app.route("/dashboard")
-    def dashboard():
 
-       if not is_logged_in():
-        return redirect(url_for("login"))
 
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-
-    # Total students
-    cursor.execute("SELECT COUNT(*) AS total FROM students")
-    total_students = cursor.fetchone()["total"]
-
-    # Present today
-    cursor.execute("""
-        SELECT COUNT(*) AS total
-        FROM attendance
-        WHERE attendance_date = CURDATE()
-        AND status='Present'
-    """)
-    present_today = cursor.fetchone()["total"]
-
-    # Absent today
-    cursor.execute("""
-        SELECT COUNT(*) AS total
-        FROM attendance
-        WHERE attendance_date = CURDATE()
-        AND status='Absent'
-    """)
-    absent_today = cursor.fetchone()["total"]
-
-    # Room Occupancy
-    room_data = []
-
-    for room in range(1, 7):
-
-        cursor.execute(
-            "SELECT COUNT(*) AS total FROM students WHERE room=%s",
-            (room,)
-        )
-
-        count = cursor.fetchone()["total"]
-
-        room_data.append(count)
-
-    conn.close()
-
-    return render_template(
-        "dashboard.html",
-        total_students=total_students,
-        present_today=present_today,
-        absent_today=absent_today,
-        room_data=room_data
-    )
     # =====================================
 # STUDENT PROFILE
 # =====================================
 
 @app.route("/student/<int:id>")
-def student_profile(id):
+def student_profile():
 
     if not is_logged_in():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute(
         "SELECT * FROM students WHERE id=?",
@@ -605,10 +556,10 @@ def student_profile(id):
         "student_profile.html",
         student=student
     )
+ 
     # =====================================
 # EXPORT ATTENDANCE REPORT TO PDF
 # =====================================
-
 @app.route("/export_pdf")
 def export_pdf():
 
@@ -616,20 +567,20 @@ def export_pdf():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     cursor.execute("""
         SELECT
             students.name,
-            students.room,
-            students.department,
+            students.room_no,
+            students.branch,
             students.year,
-            attendance.attendance_date,
+            attendance.date,
             attendance.status
         FROM attendance
         INNER JOIN students
         ON students.id = attendance.student_id
-        ORDER BY attendance.attendance_date DESC
+        ORDER BY attendance.date DESC
     """)
 
     records = cursor.fetchall()
@@ -643,7 +594,7 @@ def export_pdf():
     data = [[
         "Name",
         "Room",
-        "Department",
+        "Branch",
         "Year",
         "Date",
         "Status"
@@ -652,10 +603,10 @@ def export_pdf():
     for row in records:
         data.append([
             row["name"],
-            row["room"],
-            row["department"],
+            row["room_no"],
+            row["branch"],
             row["year"],
-            str(row["attendance_date"]),
+            str(row["date"]),
             row["status"]
         ])
 
@@ -664,15 +615,10 @@ def export_pdf():
     table.setStyle(TableStyle([
         ('BACKGROUND',(0,0),(-1,0),colors.grey),
         ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-
         ('GRID',(0,0),(-1,-1),1,colors.black),
-
         ('BACKGROUND',(0,1),(-1,-1),colors.beige),
-
         ('ALIGN',(0,0),(-1,-1),'CENTER'),
-
         ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
-
         ('BOTTOMPADDING',(0,0),(-1,0),12),
     ]))
 
@@ -685,40 +631,8 @@ def export_pdf():
         download_name="Attendance_Report.pdf",
         as_attachment=True,
         mimetype="application/pdf"
-    )
-    @app.route("/add_student", methods=["GET", "POST"])
-    def add_student():
+    ) 
 
-       if not is_logged_in():
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO students
-            (name, gender, mobile, address, room, year, department)
-            VALUES (?,?,?,?,?,?,?)
-        """, (
-            request.form["name"],
-            request.form["gender"],
-            request.form["mobile"],
-            request.form["address"],
-            request.form["room"],
-            request.form["year"],
-            request.form["department"]
-        ))
-
-        conn.commit()
-        conn.close()
-
-        flash("Student Added Successfully")
-        return redirect(url_for("students"))
-
-    return render_template("add_student.html")
-    from flask import request, render_template, redirect, url_for, flash
 
 @app.route("/fees", methods=["GET", "POST"])
 def fees():
@@ -727,9 +641,8 @@ def fees():
         return redirect(url_for("login"))
 
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
-    # Save Fee
     if request.method == "POST":
 
         student_id = request.form["student_id"]
@@ -742,18 +655,19 @@ def fees():
         due_fee = total_fee - paid_fee
 
         if due_fee <= 0:
+            payment_status = "Paid"
             due_fee = 0
-            status = "Paid"
         elif paid_fee == 0:
-            status = "Pending"
+            payment_status = "Pending"
         else:
-            status = "Partial"
+            payment_status = "Partial"
 
         cursor.execute("""
             INSERT INTO fees
-            (student_id,total_fee,paid_fee,due_fee,payment_date,
-             payment_method,payment_status,remarks)
-            VALUES(?,?,?,?,?,?,?,?)
+            (student_id, total_fee, paid_fee, due_fee,
+             payment_date, payment_method,
+             payment_status, remarks)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             student_id,
             total_fee,
@@ -761,35 +675,30 @@ def fees():
             due_fee,
             payment_date,
             payment_method,
-            status,
+            payment_status,
             remarks
         ))
 
         conn.commit()
-        flash("Fee added successfully!")
-
+        flash("Fee Added Successfully!")
         return redirect(url_for("fees"))
 
-    # Student dropdown
     cursor.execute("""
-        SELECT id,name,room
+        SELECT id, name
         FROM students
         ORDER BY name
     """)
     students = cursor.fetchall()
 
-    # Fee list
     cursor.execute("""
         SELECT
             fees.*,
-            students.name,
-            students.room
+            students.name
         FROM fees
         JOIN students
         ON fees.student_id = students.id
         ORDER BY fees.id DESC
     """)
-
     fees_data = cursor.fetchall()
 
     conn.close()
@@ -800,7 +709,7 @@ def fees():
         fees=fees_data
     )
 
-
+        
     # =====================================
 # MAIN
 # =====================================

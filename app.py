@@ -207,7 +207,7 @@ def add_student():
         gender = request.form["gender"]
         mobile = request.form["mobile"]
         address = request.form["address"]
-        room = request.form["room"]
+        room_no = request.form["room_no"]
         year = request.form["year"]
         department = request.form["department"]
 

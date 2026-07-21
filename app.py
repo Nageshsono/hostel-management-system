@@ -61,7 +61,7 @@ def register():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute(
-            "SELECT * FROM users WHERE username=%s",
+            "SELECT * FROM users WHERE username=%?",
             (username,)
         )
 
@@ -77,7 +77,7 @@ def register():
         cursor.execute(
             """
             INSERT INTO users(username,password,role)
-            VALUES(%s,%s,%s)
+            VALUES(?,?,?)
             """,
             (username, hashed, "admin")
         )
@@ -106,7 +106,7 @@ def login():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute(
-            "SELECT * FROM users WHERE username=%s",
+            "SELECT * FROM users WHERE username=?",
             (username,)
         )
 
@@ -180,7 +180,7 @@ def dashboard():
 
     for room in range(1, 7):
         cursor.execute(
-            "SELECT COUNT(*) AS total FROM students WHERE room=%s",
+            "SELECT COUNT(*) AS total FROM students WHERE room=?",
             (room,)
         )
 
@@ -221,7 +221,7 @@ def add_student():
 
         # Maximum 4 students per room
         cursor.execute(
-            "SELECT COUNT(*) FROM students WHERE room=%s",
+            "SELECT COUNT(*) FROM students WHERE room=?",
             (room,)
         )
 
@@ -235,7 +235,7 @@ def add_student():
         cursor.execute("""
             INSERT INTO students
             (name, gender, mobile, address, room, year, department)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
+            VALUES (?,?,?,?,?,?,?)
         """, (
             name,
             gender,
@@ -299,7 +299,7 @@ def rooms():
     for room in range(1, 7):
 
         cursor.execute(
-            "SELECT * FROM students WHERE room=%s ORDER BY name",
+            "SELECT * FROM students WHERE room=? ORDER BY name",
             (room,)
         )
 
@@ -353,8 +353,8 @@ def attendance():
             cursor.execute("""
                 SELECT id
                 FROM attendance
-                WHERE student_id=%s
-                AND attendance_date=%s
+                WHERE student_id=?
+                AND attendance_date=?
             """, (student_id, today))
 
             record = cursor.fetchone()
@@ -363,8 +363,8 @@ def attendance():
 
                 cursor.execute("""
                     UPDATE attendance
-                    SET status=%s
-                    WHERE id=%s
+                    SET status=?
+                    WHERE id=?
                 """, (status, record["id"]))
 
             else:
@@ -372,7 +372,7 @@ def attendance():
                 cursor.execute("""
                     INSERT INTO attendance
                     (student_id, attendance_date, status)
-                    VALUES (%s,%s,%s)
+                    VALUES (?,?,?)
                 """, (
                     student_id,
                     today,
@@ -423,7 +423,7 @@ def today_attendance():
         FROM attendance
         INNER JOIN students
             ON students.id = attendance.student_id
-        WHERE attendance.attendance_date=%s
+        WHERE attendance.attendance_date=?
         ORDER BY students.room, students.name
     """, (today,))
 
@@ -432,7 +432,7 @@ def today_attendance():
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE attendance_date=%s
+        WHERE attendance_date=?
         AND status='Present'
     """, (today,))
     present_count = cursor.fetchone()["total"]
@@ -440,7 +440,7 @@ def today_attendance():
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE attendance_date=%s
+        WHERE attendance_date=?
         AND status='Absent'
     """, (today,))
     absent_count = cursor.fetchone()["total"]
@@ -473,7 +473,7 @@ def report():
     cursor.execute("""
         SELECT *
         FROM students
-        WHERE name LIKE %s
+        WHERE name LIKE ?
         ORDER BY name
     """, ("%" + search + "%",))
 
@@ -486,7 +486,7 @@ def report():
         cursor.execute("""
             SELECT COUNT(*) AS present
             FROM attendance
-            WHERE student_id=%s
+            WHERE student_id=?
             AND status='Present'
         """, (student["id"],))
 
@@ -495,7 +495,7 @@ def report():
         cursor.execute("""
             SELECT COUNT(*) AS absent
             FROM attendance
-            WHERE student_id=%s
+            WHERE student_id=?
             AND status='Absent'
         """, (student["id"],))
 
@@ -593,7 +593,7 @@ def student_profile(id):
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
-        "SELECT * FROM students WHERE id=%s",
+        "SELECT * FROM students WHERE id=?",
         (id,)
     )
 
@@ -700,7 +700,7 @@ def export_pdf():
         cursor.execute("""
             INSERT INTO students
             (name, gender, mobile, address, room, year, department)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
+            VALUES (?,?,?,?,?,?,?)
         """, (
             request.form["name"],
             request.form["gender"],
@@ -753,7 +753,7 @@ def fees():
             INSERT INTO fees
             (student_id,total_fee,paid_fee,due_fee,payment_date,
              payment_method,payment_status,remarks)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
+            VALUES(?,?,?,?,?,?,?,?)
         """, (
             student_id,
             total_fee,

@@ -216,14 +216,14 @@ def add_student():
 
         # Maximum 4 students per room
         cursor.execute(
-            "SELECT COUNT(*) FROM students WHERE room=?",
-            (room,)
+            "SELECT COUNT(*) FROM students WHERE room_no=?",
+            (room_no,)
         )
 
         room_count = cursor.fetchone()[0]
 
         if room_count >= 4:
-            flash(f"Room {room} is already full.")
+            flash(f"Room {room_no} is already full.")
             conn.close()
             return redirect(url_for("add_student"))
 

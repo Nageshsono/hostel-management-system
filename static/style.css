@@ -273,3 +273,14 @@ canvas {
     }
 
 }
+footer {
+    background: #6bc2ac;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    margin-top: 30px;
+    font-size: 14px;
+}

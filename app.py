@@ -5,8 +5,13 @@ from flask import (
     redirect,
     url_for,
     session,
-    flash
+    flash,send_file
 )
+import io
+
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
 
 from werkzeug.security import (
     generate_password_hash,

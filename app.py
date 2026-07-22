@@ -194,7 +194,6 @@ def dashboard():
 
 # ADD STUDENT
 # =====================================
-
 @app.route("/add_student", methods=["GET", "POST"])
 def add_student():
 
@@ -203,26 +202,26 @@ def add_student():
 
     if request.method == "POST":
 
-        name = request.form["name"]
-        gender = request.form["gender"]
-        mobile = request.form["mobile"]
-        address = request.form["address"]
-        room_no = request.form["room_no"]
-        year = request.form["year"]
-        department = request.form["department"]
+        name = request.form.get("name")
+        gender = request.form.get("gender")
+        mobile = request.form.get("mobile")
+        address = request.form.get("address")
+        room_no = request.form.get("room_no")
+        year = request.form.get("year")
+        department = request.form.get("department")
 
         conn = get_db()
         cursor = conn.cursor()
 
         # Maximum 4 students per room
         cursor.execute(
-            "SELECT COUNT(*) FROM students WHERE room_no=?",
+            "SELECT COUNT(*) FROM students WHERE room_no = ?",
             (room_no,)
         )
 
-        room_no_count = cursor.fetchone()[0]
+        room_count = cursor.fetchone()[0]
 
-        if room_no_count >= 4:
+        if room_count >= 4:
             flash(f"Room {room_no} is already full.")
             conn.close()
             return redirect(url_for("add_student"))
@@ -230,7 +229,7 @@ def add_student():
         cursor.execute("""
             INSERT INTO students
             (name, gender, mobile, address, room_no, year, department)
-            VALUES (?,?,?,?,?,?,?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             name,
             gender,
@@ -244,8 +243,7 @@ def add_student():
         conn.commit()
         conn.close()
 
-        flash("Student Added Successfully")
-
+        flash("Student Added Successfully!")
         return redirect(url_for("students"))
 
     return render_template("add_student.html")

@@ -26,7 +26,7 @@
         <textarea name="address" required>{{ student.address }}</textarea>
 
         <label>Room</label>
-        <select name="room" required>
+        <select name="room_no" required>
             {% for i in range(1,7) %}
             <option value="{{ i }}" {% if student.room==i %}selected{% endif %}>
                 Room {{ i }}

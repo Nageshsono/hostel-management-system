@@ -18,12 +18,12 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
-
-from database import get_db
+from database import get_db, init_db
 from config import SECRET_KEY
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+init_db()
 # =====================================
 # LOGIN CHECK
 # =====================================
@@ -162,12 +162,25 @@ def dashboard():
 
     # Today's date
     today = date.today().isoformat()
+    # Room Occupancy
+    # Room Occupancy
+    room_counts = []
+
+    for room in range(1, 7):
+        cursor.execute(
+        "SELECT COUNT(*) AS total FROM students WHERE room_no=?",
+         (str(room),)
+    )
+
+    room_counts.append(cursor.fetchone()["total"])
+    print("Room Counts:", room_counts)
+
 
     # Present Today
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE date = ?
+        WHERE attendance_date = ?
         AND status = ?
     """, (today, "Present"))
     present_today = cursor.fetchone()["total"]
@@ -176,20 +189,20 @@ def dashboard():
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE date = ?
+        WHERE attendance_date = ?
         AND status = ?
     """, (today, "Absent"))
     absent_today = cursor.fetchone()["total"]
 
     conn.close()
-
+    print("Room Counts:", room_counts)
     return render_template(
         "dashboard.html",
         total_students=total_students,
         total_rooms=total_rooms,
         present_today=present_today,
         absent_today=absent_today,
-        room_data=[]
+        room_data=room_counts
     )
 
 # ADD STUDENT
@@ -207,6 +220,7 @@ def add_student():
         mobile = request.form.get("mobile")
         address = request.form.get("address")
         room_no = request.form.get("room_no")
+        print("Selected Room:", room_no)  
         year = request.form.get("year")
         department = request.form.get("department")
 
@@ -221,7 +235,7 @@ def add_student():
 
         room_count = cursor.fetchone()[0]
 
-        if room_count >= 4:
+        if room_count >= 10:
             flash(f"Room {room_no} is already full.")
             conn.close()
             return redirect(url_for("add_student"))
@@ -267,6 +281,8 @@ def students():
     """)
 
     students = cursor.fetchall()
+    for student in students:
+        print(dict(student))
 
     conn.close()
 
@@ -274,6 +290,100 @@ def students():
         "students.html",
         students=students
     )
+@app.route("/edit_student/<int:student_id>", methods=["GET", "POST"])
+def edit_student(student_id):
+
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+
+        name = request.form["name"]
+        gender = request.form["gender"]
+        mobile = request.form["mobile"]
+        address = request.form["address"]
+        room_no = request.form["room_no"]
+        year = request.form["year"]
+        department = request.form["department"]
+
+        cursor.execute("""
+            UPDATE students
+            SET
+                name=?,
+                gender=?,
+                mobile=?,
+                address=?,
+                room_no=?,
+                year=?,
+                department=?
+            WHERE id=?
+        """, (
+            name,
+            gender,
+            mobile,
+            address,
+            room_no,
+            year,
+            department,
+            student_id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        flash("Student Updated Successfully")
+        return redirect(url_for("students"))
+
+    cursor.execute(
+        "SELECT * FROM students WHERE id=?",
+        (student_id,)
+    )
+
+    student = cursor.fetchone()
+
+    conn.close()
+
+    return render_template(
+        "edit_student.html",
+        student=student
+    )
+@app.route("/delete_student/<int:student_id>")
+def delete_student(student_id):
+
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Delete attendance records first
+    cursor.execute(
+        "DELETE FROM attendance WHERE student_id = ?",
+        (student_id,)
+    )
+
+    # Delete fee records
+    cursor.execute(
+        "DELETE FROM fees WHERE student_id = ?",
+        (student_id,)
+    )
+
+    # Delete student
+    cursor.execute(
+        "DELETE FROM students WHERE id = ?",
+        (student_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash("Student deleted successfully!")
+
+    return redirect(url_for("students"))
+
     # =====================================
 # ROOMS
 # =====================================
@@ -295,7 +405,7 @@ def rooms():
             FROM students
             WHERE room_no = ?
             ORDER BY name
-        """, (str(room),))
+        """, (room,))
 
         students = cursor.fetchall()
 
@@ -349,7 +459,7 @@ def attendance():
                 SELECT id
                 FROM attendance
                 WHERE student_id = ?
-                AND date = ?
+                AND attendance_date = ?
             """, (student_id, today))
 
             record = cursor.fetchone()
@@ -366,7 +476,7 @@ def attendance():
 
                 cursor.execute("""
                     INSERT INTO attendance
-                    (student_id, date, status)
+                    (student_id, attendance_date, status)
                     VALUES (?, ?, ?)
                 """, (
                     student_id,
@@ -420,7 +530,7 @@ def today_attendance():
         FROM attendance
         INNER JOIN students
             ON students.id = attendance.student_id
-        WHERE attendance.date = ?
+        WHERE attendance.attendance_date = ?
         ORDER BY students.room_no, students.name
     """, (today,))
 
@@ -430,7 +540,7 @@ def today_attendance():
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE date = ?
+        WHERE attendance_date = ?
         AND status = ?
     """, (today, "Present"))
 
@@ -440,7 +550,7 @@ def today_attendance():
     cursor.execute("""
         SELECT COUNT(*) AS total
         FROM attendance
-        WHERE date = ?
+        WHERE attendance_date = ?
         AND status = ?
     """, (today, "Absent"))
 
@@ -512,7 +622,7 @@ def report():
         reports.append({
             "name": student["name"],
             "room": student["room_no"],      # SQLite column
-            "branch": student["branch"],     # SQLite column
+            "Department": student["Department"],     # SQLite column
             "year": student["year"],
             "present": present,
             "absent": absent,
@@ -533,7 +643,7 @@ def report():
 # =====================================
 
 @app.route("/student/<int:id>")
-def student_profile():
+def student_profile(id):
 
     if not is_logged_in():
         return redirect(url_for("login"))
@@ -571,14 +681,14 @@ def export_pdf():
         SELECT
             students.name,
             students.room_no,
-            students.branch,
+            students.Department,
             students.year,
-            attendance.date,
+            attendance.attendance_date,
             attendance.status
         FROM attendance
         INNER JOIN students
         ON students.id = attendance.student_id
-        ORDER BY attendance.date DESC
+        ORDER BY attendance.attendance_date DESC
     """)
 
     records = cursor.fetchall()
@@ -592,7 +702,7 @@ def export_pdf():
     data = [[
         "Name",
         "Room",
-        "Branch",
+        "Department",
         "Year",
         "Date",
         "Status"
@@ -602,9 +712,9 @@ def export_pdf():
         data.append([
             row["name"],
             row["room_no"],
-            row["branch"],
+            row["department"],
             row["year"],
-            str(row["date"]),
+            str(row["attendance_date"]),
             row["status"]
         ])
 

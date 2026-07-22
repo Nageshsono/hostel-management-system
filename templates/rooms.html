@@ -16,6 +16,7 @@
         <th>Name</th>
         <th>Department</th>
         <th>Year</th>
+        <th>Mobile Number</th>
     </tr>
 
     {% for student in room.students %}
@@ -24,6 +25,8 @@
         <td>{{ student.name }}</td>
         <td>{{ student.department }}</td>
         <td>{{ student.year }}</td>
+        <td>{{ student.mobile}}</td>
+
     </tr>
 
     {% endfor %}

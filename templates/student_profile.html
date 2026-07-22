@@ -4,51 +4,123 @@
 
 {% block content %}
 
-<h2>Student Profile</h2>
+<div class="profile-container">
 
-<table border="1" cellpadding="10" width="60%">
+    <h2>👨‍🎓 Student Profile</h2>
 
-    <tr>
-        <th>Name</th>
-        <td>{{ student.name }}</td>
-    </tr>
+    <div class="profile-card">
 
-    <tr>
-        <th>Gender</th>
-        <td>{{ student.gender }}</td>
-    </tr>
+        <table class="profile-table">
 
-    <tr>
-        <th>Mobile</th>
-        <td>{{ student.mobile }}</td>
-    </tr>
+            <tr>
+                <th>🆔 Student ID</th>
+                <td>{{ student.id }}</td>
+            </tr>
 
-    <tr>
-        <th>Department</th>
-        <td>{{ student.department }}</td>
-    </tr>
+            <tr>
+                <th>👤 Name</th>
+                <td>{{ student.name }}</td>
+            </tr>
 
-    <tr>
-        <th>Year</th>
-        <td>{{ student.year }}</td>
-    </tr>
+            <tr>
+                <th>🚻 Gender</th>
+                <td>{{ student.gender }}</td>
+            </tr>
 
-    <tr>
-        <th>Room</th>
-        <td>{{ student.room }}</td>
-    </tr>
+            <tr>
+                <th>📱 Mobile</th>
+                <td>{{ student.mobile }}</td>
+            </tr>
 
-    <tr>
-        <th>Address</th>
-        <td>{{ student.address }}</td>
-    </tr>
+            <tr>
+                <th>🏠 Address</th>
+                <td>{{ student.address }}</td>
+            </tr>
 
-</table>
+            <tr>
+                <th>🚪 Room No</th>
+                <td>{{ student.room_no }}</td>
+            </tr>
 
-<br>
+            <tr>
+                <th>🎓 Year</th>
+                <td>{{ student.year }}</td>
+            </tr>
 
-<a href="{{ url_for('students') }}">
-    <button>Back</button>
-</a>
+            <tr>
+                <th>💻 Department</th>
+                <td>{{ student.department }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    <a href="{{ url_for('students') }}" class="btn btn-primary">
+        ⬅ Back to Students
+    </a>
+
+    <button onclick="window.print()" class="btn btn-success">
+        🖨 Print Profile
+    </button>
+
+</div>
+
+<style>
+    .profile-container {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .profile-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, .15);
+    }
+
+    .profile-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .profile-table th {
+        width: 35%;
+        background: #2563eb;
+        color: white;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .profile-table td {
+        padding: 12px;
+        background: #f8f9fa;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        text-decoration: none;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        margin-right: 10px;
+        font-size: 15px;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+    }
+
+    .btn-success {
+        background: #16a34a;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+</style>
 
 {% endblock %}

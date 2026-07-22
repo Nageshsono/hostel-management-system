@@ -37,7 +37,7 @@
 
 <script>
 
-    const roomData = [];
+    const roomData = {{ room_data | tojson }};
 
     new Chart(document.getElementById("roomChart"), {
 
